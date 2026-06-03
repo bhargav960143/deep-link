@@ -34,8 +34,8 @@ class TenantRegistrationService
                 'plan_slug' => 'free',
             ]);
 
-            $domain = env('TENANT_URL_PATTERN', '{tenant}.deeplink.test');
-            $fullDomain = str_replace('{tenant}', $slug, $domain);
+            $pattern = config('tenancy.tenant_url_pattern');
+            $fullDomain = str_replace('{tenant}', $slug, $pattern);
 
             $tenant->domains()->create([
                 'domain' => $fullDomain,

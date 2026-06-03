@@ -20,6 +20,8 @@ return [
         array_map('trim', explode(',', env('TENANCY_CENTRAL_DOMAINS', 'localhost,127.0.0.1')))
     ),
 
+    'tenant_url_pattern' => env('TENANT_URL_PATTERN', '{tenant}.deeplink.trentiums.com'),
+
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.
