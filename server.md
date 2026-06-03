@@ -22,8 +22,9 @@ Complete reference for infrastructure, configuration, and architecture of the De
 14. [Database Schema](#14-database-schema)
 15. [Request Lifecycle](#15-request-lifecycle)
 16. [Auto-Renewal Flow](#16-auto-renewal-flow)
-17. [Deployment Checklist](#17-deployment-checklist)
-18. [Troubleshooting](#18-troubleshooting)
+17. [Queue Worker](#17-queue-worker)
+18. [Deployment Checklist](#18-deployment-checklist)
+19. [Troubleshooting](#19-troubleshooting)
 
 ---
 
@@ -842,7 +843,172 @@ Nginx picks up new cert — zero downtime renewal
 
 ---
 
-## 17. Deployment Checklist
+## 17. Queue Worker
+
+### Overview
+
+Laravel queue jobs (e.g. `LogLinkClick`) are processed by a persistent worker running as a systemd service. The worker connects to Redis and processes jobs from the `default` queue.
+
+### Service File
+
+```
+/etc/systemd/system/deeplink-worker.service
+```
+
+```ini
+[Unit]
+Description=DeepLink SaaS Queue Worker
+After=network.target redis.service postgresql.service
+Requires=redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/apps/deeplink.trentiums.com/htdocs
+ExecStart=/usr/bin/php artisan queue:work redis \
+    --sleep=3 \
+    --tries=3 \
+    --timeout=90 \
+    --memory=256 \
+    --max-jobs=1000 \
+    --max-time=3600
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/apps/deeplink.trentiums.com/htdocs/storage/logs/worker.log
+StandardError=append:/opt/apps/deeplink.trentiums.com/htdocs/storage/logs/worker.log
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Configuration Options Explained
+
+| Flag | Value | Reason |
+|---|---|---|
+| `connection` | `redis` | matches `QUEUE_CONNECTION=redis` in `.env` |
+| `--sleep=3` | 3 seconds | poll interval when queue is empty |
+| `--tries=3` | 3 retries | job moves to `failed_jobs` after 3 failures |
+| `--timeout=90` | 90 seconds | max execution time per job (exceeds default 60s for heavier jobs) |
+| `--memory=256` | 256 MB | worker self-terminates if memory exceeds limit; systemd restarts it |
+| `--max-jobs=1000` | 1000 jobs | graceful restart after 1000 jobs to prevent memory creep |
+| `--max-time=3600` | 3600 seconds | graceful restart every hour for fresh process |
+| `Restart=on-failure` | — | systemd auto-restarts if worker crashes or exits non-zero |
+| `RestartSec=5` | 5 seconds | brief pause before restart to avoid rapid crash loops |
+| `After=redis.service` | — | systemd waits for Redis before starting worker |
+
+### Worker Log
+
+```
+/opt/apps/deeplink.trentiums.com/htdocs/storage/logs/worker.log
+```
+
+```bash
+tail -f storage/logs/worker.log     # live follow
+```
+
+### Service Management Commands
+
+```bash
+# Status
+sudo systemctl status deeplink-worker
+
+# Start / Stop / Restart
+sudo systemctl start deeplink-worker
+sudo systemctl stop deeplink-worker
+sudo systemctl restart deeplink-worker      # required after every code deploy
+
+# Enable auto-start on boot
+sudo systemctl enable deeplink-worker
+
+# Disable auto-start
+sudo systemctl disable deeplink-worker
+
+# View systemd journal logs
+sudo journalctl -u deeplink-worker -f
+sudo journalctl -u deeplink-worker --since "1 hour ago"
+```
+
+### Install / Re-install Service
+
+```bash
+sudo tee /etc/systemd/system/deeplink-worker.service > /dev/null << 'EOF'
+[Unit]
+Description=DeepLink SaaS Queue Worker
+After=network.target redis.service postgresql.service
+Requires=redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/apps/deeplink.trentiums.com/htdocs
+ExecStart=/usr/bin/php artisan queue:work redis \
+    --sleep=3 \
+    --tries=3 \
+    --timeout=90 \
+    --memory=256 \
+    --max-jobs=1000 \
+    --max-time=3600
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/apps/deeplink.trentiums.com/htdocs/storage/logs/worker.log
+StandardError=append:/opt/apps/deeplink.trentiums.com/htdocs/storage/logs/worker.log
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable deeplink-worker
+sudo systemctl start deeplink-worker
+sudo chown ubuntu:ubuntu storage/logs/worker.log
+```
+
+### Jobs That Use the Queue
+
+| Job | Trigger | Purpose |
+|---|---|---|
+| `LogLinkClick` | Deep link redirect | Async click tracking → `link_clicks` table |
+
+### Failed Jobs
+
+Jobs that fail all 3 retries land in the `failed_jobs` table.
+
+```bash
+# List failed jobs
+php artisan queue:failed
+
+# Retry a specific failed job
+php artisan queue:retry <id>
+
+# Retry all failed jobs
+php artisan queue:retry all
+
+# Flush all failed jobs
+php artisan queue:flush
+```
+
+### Deploy Workflow
+
+After every code deployment, restart the worker so it picks up new code:
+
+```bash
+git pull origin main
+composer install --no-interaction
+php artisan migrate --force
+php artisan optimize:clear
+npm run build
+sudo systemctl restart deeplink-worker
+```
+
+---
+
+## 18. Deployment Checklist
 
 Use this when setting up on a fresh server.
 
@@ -955,7 +1121,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 18. Troubleshooting
+## 19. Troubleshooting
 
 ### 403 Forbidden
 
@@ -1031,11 +1197,20 @@ php artisan optimize:clear
 ### Queue Worker Not Processing
 
 ```bash
-# Start worker manually
-php artisan queue:work --tries=3
+# Check service status
+sudo systemctl status deeplink-worker
 
 # Check Redis queue depth
 redis-cli llen queues:default
+
+# Check worker log
+tail -50 storage/logs/worker.log
+
+# Restart service
+sudo systemctl restart deeplink-worker
+
+# Start worker manually (debug mode)
+php artisan queue:work redis --tries=3 -vvv
 ```
 
 ---
