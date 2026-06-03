@@ -67,7 +67,7 @@
                     <input id="ios_bundle_id" name="ios_bundle_id" type="text" value="{{ old('ios_bundle_id') }}"
                            placeholder="com.example.myapp"
                            class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('ios_bundle_id') border-red-400 @enderror">
-                    <p class="mt-1 text-xs text-gray-400">Found in Xcode → Targets → General → Bundle Identifier</p>
+                    <p class="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100"><strong>What is this?</strong> A unique identifier for your app (e.g., com.yourcompany.app). Found in Xcode → Targets → General → Bundle Identifier.</p>
                     @error('ios_bundle_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
@@ -76,7 +76,7 @@
                     <input id="ios_team_id" name="ios_team_id" type="text" value="{{ old('ios_team_id') }}"
                            placeholder="ABCDE12345" maxlength="10"
                            class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('ios_team_id') border-red-400 @enderror">
-                    <p class="mt-1 text-xs text-gray-400">10-char ID from <a href="https://developer.apple.com/account" target="_blank" class="text-indigo-600">developer.apple.com</a> → Membership</p>
+                    <p class="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100"><strong>What is this?</strong> Your 10-character Apple Developer Team ID. Found at <a href="https://developer.apple.com/account" target="_blank" class="text-indigo-600 hover:underline">developer.apple.com</a> → Membership. This is required for Universal Links (AASA file) to verify app ownership.</p>
                     @error('ios_team_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
@@ -110,7 +110,7 @@
                     <input id="android_package_name" name="android_package_name" type="text" value="{{ old('android_package_name') }}"
                            placeholder="com.example.myapp"
                            class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('android_package_name') border-red-400 @enderror">
-                    <p class="mt-1 text-xs text-gray-400">From AndroidManifest.xml → package attribute</p>
+                    <p class="mt-1 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-100"><strong>What is this?</strong> Your app's unique package name (e.g., com.example.myapp). Found in your AndroidManifest.xml.</p>
                     @error('android_package_name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 

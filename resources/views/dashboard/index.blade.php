@@ -5,49 +5,86 @@
         <p class="mt-1 text-sm text-gray-500">Welcome to your DeepLink workspace.</p>
     </div>
 
+    @php
+        $hasDomain = $stats['total_domains'] > 0;
+        $hasApp = $stats['total_apps'] > 0;
+        $hasLink = $stats['total_links'] > 0;
+        $needsOnboarding = !($hasDomain && $hasApp && $hasLink);
+    @endphp
+
+    @if($needsOnboarding)
+    <div class="bg-gradient-to-r from-indigo-50 to-white rounded-2xl border border-indigo-100 p-8 mb-8 shadow-sm">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome! Let's get started.</h2>
+        <p class="text-gray-600 mb-8">Follow these three simple steps to launch your first deep link.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {{-- Step 1 --}}
+            <div class="relative bg-white rounded-xl p-6 border {{ $hasDomain ? 'border-green-200 shadow-sm' : 'border-indigo-200 shadow-md ring-1 ring-indigo-100' }} transition-all">
+                @if($hasDomain)
+                    <div class="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                @endif
+                <div class="w-10 h-10 rounded-full {{ $hasDomain ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600' }} flex items-center justify-center font-bold text-lg mb-4">1</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Connect a Domain</h3>
+                <p class="text-sm text-gray-500 mb-4">Add your custom domain (e.g., link.yourbrand.com) to serve your deep links securely.</p>
+                @if(!$hasDomain)
+                    <a href="{{ route('domains.create') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                        Add Domain <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                @endif
+            </div>
+
+            {{-- Step 2 --}}
+            <div class="relative bg-white rounded-xl p-6 border {{ $hasApp ? 'border-green-200 shadow-sm' : ($hasDomain ? 'border-indigo-200 shadow-md ring-1 ring-indigo-100' : 'border-gray-200 opacity-60') }} transition-all">
+                @if($hasApp)
+                    <div class="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                @endif
+                <div class="w-10 h-10 rounded-full {{ $hasApp ? 'bg-green-100 text-green-600' : ($hasDomain ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400') }} flex items-center justify-center font-bold text-lg mb-4">2</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Add Mobile App</h3>
+                <p class="text-sm text-gray-500 mb-4">Register your iOS or Android app details so we know where to route your users.</p>
+                @if(!$hasApp && $hasDomain)
+                    <a href="{{ route('apps.create') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                        Add App <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                @endif
+            </div>
+
+            {{-- Step 3 --}}
+            <div class="relative bg-white rounded-xl p-6 border {{ $hasLink ? 'border-green-200 shadow-sm' : ($hasApp ? 'border-indigo-200 shadow-md ring-1 ring-indigo-100' : 'border-gray-200 opacity-60') }} transition-all">
+                @if($hasLink)
+                    <div class="absolute -top-3 -right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-sm text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                @endif
+                <div class="w-10 h-10 rounded-full {{ $hasLink ? 'bg-green-100 text-green-600' : ($hasApp ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400') }} flex items-center justify-center font-bold text-lg mb-4">3</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Create a Deep Link</h3>
+                <p class="text-sm text-gray-500 mb-4">Generate your first intelligent link to seamlessly route users into your app.</p>
+                @if(!$hasLink && $hasApp)
+                    <a href="{{ route('links.create') }}" class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700">
+                        Create Link <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Stats grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @foreach([
-            ['label' => 'Total Links', 'value' => '0', 'color' => 'indigo'],
-            ['label' => 'Total Clicks', 'value' => '0', 'color' => 'blue'],
-            ['label' => 'Clicks Today', 'value' => '0', 'color' => 'green'],
-            ['label' => 'Apps Registered', 'value' => '0', 'color' => 'purple'],
+            ['label' => 'Total Links', 'value' => $stats['total_links'], 'color' => 'indigo'],
+            ['label' => 'Active Links', 'value' => $stats['active_links'], 'color' => 'blue'],
+            ['label' => 'Apps Registered', 'value' => $stats['total_apps'], 'color' => 'purple'],
+            ['label' => 'Domains Connected', 'value' => $stats['total_domains'], 'color' => 'green'],
         ] as $stat)
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <div class="text-sm font-medium text-gray-500">{{ $stat['label'] }}</div>
             <div class="mt-2 text-3xl font-bold text-gray-900">{{ $stat['value'] }}</div>
         </div>
         @endforeach
-    </div>
-
-    {{-- Getting started --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">Getting started</h2>
-        <div class="space-y-3">
-            @php
-                $steps = [
-                    ['done' => true, 'label' => 'Create your account'],
-                    ['done' => false, 'label' => 'Register your mobile app (iOS / Android)'],
-                    ['done' => false, 'label' => 'Configure your app\'s associated domains in Xcode / AndroidManifest'],
-                    ['done' => false, 'label' => 'Create your first deep link'],
-                    ['done' => false, 'label' => 'Test the link on a real device'],
-                ];
-            @endphp
-            @foreach($steps as $step)
-            <div class="flex items-center gap-3">
-                @if($step['done'])
-                    <div class="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                        <svg class="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                @else
-                    <div class="w-5 h-5 border-2 border-gray-300 rounded-full shrink-0"></div>
-                @endif
-                <span class="text-sm {{ $step['done'] ? 'text-gray-400 line-through' : 'text-gray-700' }}">{{ $step['label'] }}</span>
-            </div>
-            @endforeach
-        </div>
     </div>
 
     {{-- Plan badge --}}

@@ -49,13 +49,13 @@
         <div>
             <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Workspace URL</label>
             <div class="flex items-stretch rounded-lg border border-gray-300 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent @error('slug') border-red-400 @enderror">
-                <span class="flex items-center px-3 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">
-                    app.deeplink.io/
-                </span>
                 <input id="slug" name="slug" type="text" value="{{ old('slug') }}" required
                        x-model="slug"
                        x-on:input.debounce.400ms="checkSlug"
-                       class="flex-1 px-3 py-2 text-sm text-gray-900 focus:outline-none">
+                       class="flex-1 px-3 py-2 text-sm text-gray-900 focus:outline-none text-right placeholder-gray-400" placeholder="your-workspace">
+                <span class="flex items-center px-3 bg-gray-50 text-gray-500 text-sm border-l border-gray-300 whitespace-nowrap">
+                    .{{ str_replace(['http://', 'https://'], '', config('app.url')) }}
+                </span>
                 <span class="flex items-center px-3">
                     <template x-if="slugStatus === 'available'">
                         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>

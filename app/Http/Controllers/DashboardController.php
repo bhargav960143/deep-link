@@ -33,6 +33,7 @@ class DashboardController extends Controller
 
         // Quick stats for the dashboard
         $stats = [
+            'total_domains' => \App\Models\Domain::where('tenant_id', $tenant->id)->count(),
             'total_apps' => App::where('tenant_id', $tenant->id)->count(),
             'total_links' => Link::where('tenant_id', $tenant->id)->count(),
             'active_links' => Link::where('tenant_id', $tenant->id)->where('is_active', true)->count(),
