@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name', 'slug', 'razorpay_plan_id_monthly', 'razorpay_plan_id_yearly',
         'price_monthly', 'price_yearly', 'links_limit', 'clicks_limit',

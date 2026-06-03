@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'tenant.access' => \App\Http\Middleware\EnsureTenantAccess::class,
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+            '*/api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

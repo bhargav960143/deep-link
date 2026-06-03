@@ -41,11 +41,11 @@ class PlatformDetector
     private function detectBrowser(string $ua): ?string
     {
         return match (true) {
+            str_contains($ua, 'Edge') || str_contains($ua, 'Edg/') => 'Edge',
+            str_contains($ua, 'Opera') || str_contains($ua, 'OPR') => 'Opera',
             str_contains($ua, 'Chrome') && ! str_contains($ua, 'Chromium') => 'Chrome',
             str_contains($ua, 'Firefox') => 'Firefox',
             str_contains($ua, 'Safari') && ! str_contains($ua, 'Chrome') => 'Safari',
-            str_contains($ua, 'Edge') || str_contains($ua, 'Edg/') => 'Edge',
-            str_contains($ua, 'Opera') || str_contains($ua, 'OPR') => 'Opera',
             default => null,
         };
     }

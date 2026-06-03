@@ -1,58 +1,164 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🔗 DeepLink SaaS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Multi-tenant deep link management platform** — the self-hosted alternative to Firebase Dynamic Links and Branch.io.
 
-## About Laravel
+Create, manage, and track deep links that intelligently route users to your iOS app, Android app, or web fallback — with full multi-tenancy, analytics, and team collaboration.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Core (Phase 1–5 — Implemented)
+- **Universal Links / App Links** — Serves `.well-known/apple-app-site-association` and `assetlinks.json` per tenant
+- **Smart Redirect Engine** — Platform detection → Universal Link → URI scheme → App Store → web fallback cascade
+- **Multi-tenancy** — Domain-based tenant isolation via [stancl/tenancy](https://tenancyforlaravel.com/) with shared database strategy
+- **App Registration** — Register iOS and Android apps with bundle IDs, SHA-256 fingerprints, store URLs
+- **Link Management** — Create short links with custom codes, passwords, expiration, max clicks, UTM params
+- **Async Click Logging** — Non-blocking click tracking dispatched to queue with IP hashing for privacy
+- **Bot Detection** — Serves OG meta tags to crawlers without triggering redirects
+- **Auth System** — Registration, login, password reset, email verification, 2FA via Google Authenticator
 
-## Learning Laravel
+### Planned
+- Custom domain support with SSL (Phase 6)
+- Analytics dashboard with charts (Phase 7)
+- REST API with API key authentication (Phase 8)
+- Razorpay billing integration (Phase 9)
+- Security hardening & rate limiting audit (Phase 10)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠 Tech Stack
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Laravel 12 |
+| **Multi-tenancy** | stancl/tenancy v3 (single DB, domain identification) |
+| **Database** | MySQL 8 |
+| **Cache / Queue** | Redis (via predis) — configurable via `.env` |
+| **Auth** | Laravel built-in + PragmaRX Google2FA |
+| **Frontend** | Blade templates + Vite |
+| **Roles** | Owner / Admin / Member (via `tenant_users` pivot) |
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 🚀 Local Setup
+
+### Prerequisites
+- PHP 8.2+
+- Composer
+- MySQL 8+
+- Node.js 18+ & npm
+- Redis (optional, for cache/queue)
+
+### Installation
 
 ```bash
-composer require laravel/boost --dev
+# Clone the repository
+git clone <your-repo-url> deep-link
+cd deep-link
 
-php artisan boost:install
+# Install PHP dependencies
+composer install
+
+# Install JS dependencies
+npm install
+
+# Environment setup
+cp .env.example .env
+php artisan key:generate
+
+# Configure your database in .env
+# DB_DATABASE=deeplink_saas
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# Run migrations
+php artisan migrate
+
+# Seed plans (Free, Pro, Business)
+php artisan db:seed
+
+# Build frontend assets
+npm run dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Domain Configuration
 
-## Contributing
+For local development, add these to your hosts file:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```
+127.0.0.1   app.deeplink.test
+127.0.0.1   demo.deeplink.test
+```
 
-## Code of Conduct
+Update `.env`:
+```
+APP_URL=http://app.deeplink.test
+TENANCY_CENTRAL_DOMAINS="app.deeplink.test"
+TENANT_URL_PATTERN="{tenant}.deeplink.test"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 📁 Architecture Overview
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+app/
+├── Http/
+│   ├── Controllers/
+│   │   ├── Auth/          # Login, Register, 2FA, Password Reset
+│   │   ├── AppController  # App CRUD (tenant-scoped)
+│   │   ├── LinkController # Link CRUD (tenant-scoped)
+│   │   ├── LinkRedirectController  # Smart redirect engine
+│   │   └── WellKnownController    # AASA + assetlinks serving
+│   ├── Middleware/
+│   │   └── EnsureTenantAccess     # Validates user belongs to session tenant
+│   └── Requests/          # Form validation (AppRequest, LinkRequest)
+├── Models/
+│   ├── Concerns/
+│   │   └── BelongsToTenant  # Global scope trait for tenant isolation
+│   ├── App, Link, Domain, LinkClick, Tenant, User, Plan, TenantUser
+├── Policies/              # Authorization (AppPolicy, LinkPolicy)
+├── Services/              # AASA, Assetlinks, BotDetector, PlatformDetector, ShortCodeGenerator
+└── Providers/
+    ├── AppServiceProvider
+    └── TenancyServiceProvider
 
-## License
+routes/
+├── web.php     # Central routes (auth, dashboard, CRUD)
+└── tenant.php  # Tenant domain routes (well-known, redirects)
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Tenant Isolation Strategy
+- **Single shared database** with `tenant_id` column on all tenant-owned tables
+- **Global scopes** via `BelongsToTenant` trait — auto-filters all queries
+- **EnsureTenantAccess middleware** — validates session tenant against `tenant_users` pivot
+- **Laravel Policies** — authorization checks on App and Link models
+
+---
+
+## 📋 Plan Limits
+
+| Feature | Free | Pro | Business |
+|---------|------|-----|----------|
+| Links | 100 | 10,000 | Unlimited |
+| Clicks/mo | 10,000 | 500,000 | Unlimited |
+| Apps | 1 | 5 | 20 |
+| Team Members | 1 | 3 | 10 |
+| Custom Domains | 0 | 1 | 5 |
+| API Access | ❌ | ✅ | ✅ |
+| Analytics Retention | 30 days | 1 year | 2 years |
+
+---
+
+## 🧪 Testing
+
+```bash
+php artisan test
+```
+
+---
+
+## 📄 License
+
+Proprietary. All rights reserved.

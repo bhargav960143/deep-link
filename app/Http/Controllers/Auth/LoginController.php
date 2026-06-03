@@ -28,15 +28,18 @@ class LoginController extends Controller
             'last_login_ip' => $request->ip(),
         ]);
 
-        $tenant = $user->tenants()->first();
-        if ($tenant) {
-            session(['current_tenant_id' => $tenant->id]);
-        }
-
+        // Check 2FA BEFORE setting tenant session — session will be
+        // regenerated again after 2FA, so don't set tenant here
         if ($user->hasTwoFactorEnabled()) {
             Auth::logout();
             session(['login.id' => $user->id, 'login.remember' => $request->boolean('remember')]);
             return redirect()->route('two-factor.create');
+        }
+
+        // Set tenant session only for non-2FA users (2FA users get it after challenge)
+        $tenant = $user->tenants()->first();
+        if ($tenant) {
+            session(['current_tenant_id' => $tenant->id]);
         }
 
         return redirect()->intended(route('dashboard'));

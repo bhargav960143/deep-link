@@ -20,14 +20,13 @@ class TwoFactorController extends Controller
         return view('auth.two-factor');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Google2FA $google2fa): RedirectResponse
     {
         $request->validate(['code' => ['required', 'string', 'digits:6']]);
 
         $userId = session('login.id');
         $user = User::findOrFail($userId);
 
-        $google2fa = new Google2FA();
         $valid = $google2fa->verifyKey(
             decrypt($user->two_factor_secret),
             $request->string('code')->toString()

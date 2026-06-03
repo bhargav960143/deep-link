@@ -7,7 +7,7 @@ use App\Models\TenantUser;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Stancl\Tenancy\Database\Models\Domain;
+use App\Models\Domain;
 
 class TenantRegistrationService
 {

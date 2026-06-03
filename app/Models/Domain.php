@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Stancl\Tenancy\Database\Models\Domain as BaseDomain;
 
-class Domain extends Model
+class Domain extends BaseDomain
 {
-    protected $table = 'domains';
-    protected $keyType = 'int';
+    use HasFactory, BelongsToTenant;
 
     protected $fillable = [
         'tenant_id', 'domain', 'type', 'is_primary',

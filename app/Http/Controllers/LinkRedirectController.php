@@ -72,11 +72,17 @@ class LinkRedirectController extends Controller
 
         $this->logClick($request, $link, $outcome, $platform);
 
+        $webFallback = match ($platform['platform']) {
+            'ios' => $link->ios_fallback_url ?? $link->web_fallback_url ?? $link->app?->web_fallback_url,
+            'android' => $link->android_fallback_url ?? $link->web_fallback_url ?? $link->app?->web_fallback_url,
+            default => $link->web_fallback_url ?? $link->app?->web_fallback_url,
+        };
+
         return response()->view('redirect.landing', [
             'link' => $link,
             'app' => $link->app,
             'platform' => $platform['platform'],
-            'webFallback' => $link->web_fallback_url ?? $link->app?->web_fallback_url,
+            'webFallback' => $webFallback,
             'canonicalUrl' => 'https://' . $link->domain->domain . '/l/' . $link->short_code,
         ]);
     }

@@ -32,6 +32,23 @@ class LinkRequest extends FormRequest
                     }
                 },
             ],
+            'ios_fallback_url' => [
+                'nullable', 'url', 'max:500',
+                function ($attr, $value, $fail) {
+                    if ($value && ! app(SsrfValidator::class)->isSafe($value)) {
+                        $fail('iOS Fallback URL must be a public HTTPS URL.');
+                    }
+                },
+            ],
+            'android_fallback_url' => [
+                'nullable', 'url', 'max:500',
+                function ($attr, $value, $fail) {
+                    if ($value && ! app(SsrfValidator::class)->isSafe($value)) {
+                        $fail('Android Fallback URL must be a public HTTPS URL.');
+                    }
+                },
+            ],
+            'show_interstitial' => ['nullable', 'boolean'],
             'short_code' => [
                 'nullable', 'string', 'regex:/^[a-zA-Z0-9_-]{3,20}$/',
                 function ($attr, $value, $fail) use ($domainId, $linkId) {

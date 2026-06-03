@@ -6,7 +6,6 @@ use App\Http\Requests\LinkRequest;
 use App\Models\App;
 use App\Models\Domain;
 use App\Models\Link;
-use App\Models\Tenant;
 use App\Services\ShortCodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,41 +15,41 @@ class LinkController extends Controller
 {
     public function __construct(private ShortCodeGenerator $codeGen) {}
 
-    private function tenant(): Tenant
-    {
-        return Tenant::findOrFail(session('current_tenant_id'));
-    }
-
     public function index(Request $request): View
     {
-        $tenant = $this->tenant();
+        $this->authorize('viewAny', Link::class);
+
+        // Global scope auto-filters by tenant_id
         $links = Link::with(['app', 'domain'])
-            ->where('tenant_id', $tenant->id)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('links.index', compact('tenant', 'links'));
+        return view('links.index', compact('links'));
     }
 
     public function create(Request $request): View
     {
-        $tenant = $this->tenant();
-        $apps = App::where('tenant_id', $tenant->id)->where('is_active', true)->get();
-        $domains = Domain::where('tenant_id', $tenant->id)->where('status', 'active')->get();
+        $this->authorize('create', Link::class);
 
-        return view('links.create', compact('tenant', 'apps', 'domains'));
+        // Global scope auto-filters by tenant_id
+        $apps = App::where('is_active', true)->get();
+        $domains = Domain::where('status', 'active')->get();
+
+        return view('links.create', compact('apps', 'domains'));
     }
 
     public function store(LinkRequest $request): RedirectResponse
     {
-        $tenant = $this->tenant();
+        $this->authorize('create', Link::class);
+
         $data = $request->validated();
+        $data['show_interstitial'] = $request->boolean('show_interstitial');
 
         if (empty($data['short_code'])) {
             $data['short_code'] = $this->codeGen->generate((int) $data['domain_id']);
         }
 
-        $data['tenant_id'] = $tenant->id;
+        // tenant_id is auto-set by BelongsToTenant trait
         $data['created_by'] = $request->user()->id;
 
         // Don't store empty password
@@ -65,21 +64,21 @@ class LinkController extends Controller
 
     public function edit(Request $request, Link $link): View
     {
-        $tenant = $this->tenant();
-        abort_unless($link->tenant_id === $tenant->id, 403);
+        $this->authorize('update', $link);
 
-        $apps = App::where('tenant_id', $tenant->id)->where('is_active', true)->get();
-        $domains = Domain::where('tenant_id', $tenant->id)->where('status', 'active')->get();
+        // Global scope auto-filters by tenant_id
+        $apps = App::where('is_active', true)->get();
+        $domains = Domain::where('status', 'active')->get();
 
-        return view('links.edit', compact('tenant', 'link', 'apps', 'domains'));
+        return view('links.edit', compact('link', 'apps', 'domains'));
     }
 
     public function update(LinkRequest $request, Link $link): RedirectResponse
     {
-        $tenant = $this->tenant();
-        abort_unless($link->tenant_id === $tenant->id, 403);
+        $this->authorize('update', $link);
 
         $data = $request->validated();
+        $data['show_interstitial'] = $request->boolean('show_interstitial');
 
         if (empty($data['short_code'])) {
             $data['short_code'] = $link->short_code; // keep existing
@@ -96,7 +95,8 @@ class LinkController extends Controller
 
     public function destroy(Request $request, Link $link): RedirectResponse
     {
-        abort_unless($link->tenant_id === $this->tenant()->id, 403);
+        $this->authorize('delete', $link);
+
         $link->delete();
 
         return redirect()->route('links.index')->with('success', 'Link deleted.');

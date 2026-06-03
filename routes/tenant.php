@@ -35,4 +35,10 @@ Route::middleware([
             ->name('tenant.unlock.post')
             ->middleware('throttle:5,1');
     });
+
+    // API Routes for Mobile SDKs
+    Route::prefix('api/v1')->name('api.v1.')->middleware('throttle:120,1')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->group(function () {
+        Route::get('/deferred-link', [\App\Http\Controllers\Api\DeferredLinkController::class, 'show'])->name('deferred-link');
+        Route::post('/events', [\App\Http\Controllers\Api\EventController::class, 'store'])->name('events');
+    });
 });

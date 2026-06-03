@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AppRequest;
 use App\Models\App;
-use App\Models\Tenant;
 use App\Services\AasaService;
 use App\Services\AssetlinksService;
 use Illuminate\Http\RedirectResponse;
@@ -18,73 +17,68 @@ class AppController extends Controller
         private AssetlinksService $assetlinks,
     ) {}
 
-    private function currentTenant(Request $request): Tenant
-    {
-        $tenantId = session('current_tenant_id');
-        return Tenant::findOrFail($tenantId);
-    }
-
     public function index(Request $request): View
     {
-        $tenant = $this->currentTenant($request);
-        $apps = App::where('tenant_id', $tenant->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $this->authorize('viewAny', App::class);
 
-        return view('apps.index', compact('tenant', 'apps'));
+        // Global scope auto-filters by tenant_id from session
+        $apps = App::orderBy('created_at', 'desc')->get();
+
+        return view('apps.index', ['apps' => $apps]);
     }
 
     public function create(Request $request): View
     {
-        $tenant = $this->currentTenant($request);
-        return view('apps.create', compact('tenant'));
+        $this->authorize('create', App::class);
+
+        return view('apps.create');
     }
 
     public function store(AppRequest $request): RedirectResponse
     {
-        $tenant = $this->currentTenant($request);
+        $this->authorize('create', App::class);
 
         $data = $request->validated();
-        $data['tenant_id'] = $tenant->id;
+        // tenant_id is auto-set by BelongsToTenant trait on creating
 
         App::create($data);
 
-        $this->aasa->bust($tenant->id);
-        $this->assetlinks->bust($tenant->id);
+        $tenantId = session('current_tenant_id');
+        $this->aasa->bust($tenantId);
+        $this->assetlinks->bust($tenantId);
 
         return redirect()->route('apps.index')->with('success', 'App registered successfully.');
     }
 
     public function edit(Request $request, App $app): View
     {
-        $tenant = $this->currentTenant($request);
-        abort_unless($app->tenant_id === $tenant->id, 403);
+        $this->authorize('update', $app);
 
-        return view('apps.edit', compact('tenant', 'app'));
+        return view('apps.edit', compact('app'));
     }
 
     public function update(AppRequest $request, App $app): RedirectResponse
     {
-        $tenant = $this->currentTenant($request);
-        abort_unless($app->tenant_id === $tenant->id, 403);
+        $this->authorize('update', $app);
 
         $app->update($request->validated());
 
-        $this->aasa->bust($tenant->id);
-        $this->assetlinks->bust($tenant->id);
+        $tenantId = session('current_tenant_id');
+        $this->aasa->bust($tenantId);
+        $this->assetlinks->bust($tenantId);
 
         return redirect()->route('apps.index')->with('success', 'App updated.');
     }
 
     public function destroy(Request $request, App $app): RedirectResponse
     {
-        $tenant = $this->currentTenant($request);
-        abort_unless($app->tenant_id === $tenant->id, 403);
+        $this->authorize('delete', $app);
 
         $app->delete();
 
-        $this->aasa->bust($tenant->id);
-        $this->assetlinks->bust($tenant->id);
+        $tenantId = session('current_tenant_id');
+        $this->aasa->bust($tenantId);
+        $this->assetlinks->bust($tenantId);
 
         return redirect()->route('apps.index')->with('success', 'App removed.');
     }

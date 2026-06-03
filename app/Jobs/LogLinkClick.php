@@ -33,8 +33,12 @@ class LogLinkClick implements ShouldQueue
 
     public function handle(): void
     {
-        $ipHash = hash('sha256', $this->ip . $this->linkId . date('Y-m-d'));
-        $cacheKey = "click_unique:{$ipHash}";
+        $platformDetector = app(\App\Services\PlatformDetector::class);
+        $platformInfo = $platformDetector->detect($this->userAgent);
+        $platform = $platformInfo['platform'] ?? 'unknown';
+
+        $ipHash = hash_hmac('sha256', $this->ip . $platform, config('app.key'));
+        $cacheKey = "click_unique:{$ipHash}:{$this->linkId}";
 
         $isUnique = ! Cache::has($cacheKey);
         if ($isUnique) {

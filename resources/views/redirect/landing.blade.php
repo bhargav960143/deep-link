@@ -67,6 +67,9 @@
     </p>
 
     <div class="links" id="fallback-links" style="display:none">
+        <a href="javascript:void(0)" onclick="tryUriScheme()" class="btn btn-store" id="open-app-btn" style="display:none">
+            Open in App
+        </a>
         @if($app?->ios_store_url)
         <a href="{{ $app->ios_store_url }}" class="btn btn-store" id="ios-btn">
             Download on the App Store
@@ -95,6 +98,7 @@
         iosStoreUrl:     @json($app?->ios_store_url),
         androidStoreUrl: @json($app?->android_store_url),
         webFallback:     @json($webFallback),
+        showInterstitial: @json((bool)$link->show_interstitial),
     };
 
     var ua       = navigator.userAgent;
@@ -108,9 +112,15 @@
     }
 
     function showFallback() {
-        document.getElementById('spinner').style.display = 'none';
+        var spinner = document.getElementById('spinner');
+        if (spinner) spinner.style.display = 'none';
         document.getElementById('fallback-links').style.display = 'flex';
-        show("App didn't open? Use the links below.");
+        
+        if (config.uriScheme && isMobile) {
+            document.getElementById('open-app-btn').style.display = 'block';
+        }
+        
+        show(config.showInterstitial ? "Open or download the app." : "App didn't open? Use the links below.");
     }
 
     function redirectToStore() {
@@ -139,6 +149,11 @@
         setTimeout(function () {
             showFallback();
         }, 1500);
+        return;
+    }
+
+    if (config.showInterstitial) {
+        showFallback();
         return;
     }
 

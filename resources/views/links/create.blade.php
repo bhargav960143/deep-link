@@ -139,6 +139,23 @@
                         <input name="web_fallback_url" type="url" value="{{ old('web_fallback_url') }}"
                                class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('web_fallback_url') border-red-400 @enderror">
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">iOS fallback URL override</label>
+                        <input name="ios_fallback_url" type="url" value="{{ old('ios_fallback_url') }}"
+                               class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('ios_fallback_url') border-red-400 @enderror">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Android fallback URL override</label>
+                        <input name="android_fallback_url" type="url" value="{{ old('android_fallback_url') }}"
+                               class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('android_fallback_url') border-red-400 @enderror">
+                    </div>
+                    <div class="flex items-center mt-4 mb-2">
+                        <input name="show_interstitial" id="show_interstitial" type="checkbox" value="1" {{ old('show_interstitial') ? 'checked' : '' }}
+                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                        <label for="show_interstitial" class="ml-2 block text-sm text-gray-900">
+                            Show Interstitial Preview Page (Pauses auto-redirect)
+                        </label>
+                    </div>
                     <div class="grid grid-cols-3 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">UTM Source</label>

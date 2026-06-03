@@ -48,8 +48,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
-    // Verified routes
-    Route::middleware('verified')->group(function () {
+    // Verified routes — tenant access enforced
+    Route::middleware(['verified', 'tenant.access'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Apps

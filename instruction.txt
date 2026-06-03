@@ -1,0 +1,31 @@
+Deploy checklist for first real test:
+
+  1. Linux VPS (Ubuntu 22.04 recommended)
+     - PHP 8.3 + Apache2 + MySQL 8 + Redis + Supervisor
+     - git clone → composer install --no-dev → npm run build
+     - .env: APP_URL, DB_*, REDIS_*, QUEUE_CONNECTION=redis, CACHE_STORE=redis
+
+  2. DNS (Cloudflare or your registrar)
+     - A record:  deeplink.io       → server IP
+     - A record:  *.deeplink.io     → server IP  (wildcard)
+
+  3. SSL
+     - Cloudflare proxy: free wildcard SSL for *.deeplink.io
+     - OR: certbot wildcard cert via DNS challenge
+
+  4. Apache vhost (wildcard *.deeplink.io → Laravel public/)
+  5. php artisan migrate && php artisan db:seed
+  6. supervisord: start queue workers (LogLinkClick jobs)
+
+  First test flow:
+  Register → creates acme.deeplink.io subdomain
+  → Register iOS app (bundle ID + team ID + App Store URL)
+  → In Xcode: add applinks:acme.deeplink.io to Associated Domains
+  → Create link → destination_path = /home, gets URL: https://acme.deeplink.io/l/xK9mP2
+  → Build + install on real iPhone
+  → Tap https://acme.deeplink.io/l/xK9mP2 → app opens at /home
+  → Verify AASA via: https://app-site-association.cdn-apple.com/a/v1/acme.deeplink.io
+
+  Click logging note: Run php artisan queue:work on the server (Supervisor manages this). Locally for testing: set QUEUE_CONNECTION=sync in .env.
+
+  Want to start on deployment now, or continue with Phase 7 (Analytics dashboard) first?

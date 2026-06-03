@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,12 +12,13 @@ use Illuminate\Support\Str;
 
 class Link extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'tenant_id', 'app_id', 'domain_id', 'short_code', 'destination_path',
-        'web_fallback_url', 'og_title', 'og_description', 'og_image_url',
-        'link_type', 'is_active', 'password', 'expires_at', 'max_clicks',
+        'web_fallback_url', 'ios_fallback_url', 'android_fallback_url',
+        'og_title', 'og_description', 'og_image_url',
+        'link_type', 'is_active', 'show_interstitial', 'password', 'expires_at', 'max_clicks',
         'title', 'tags', 'utm_source', 'utm_medium', 'utm_campaign', 'created_by',
     ];
 
@@ -24,6 +27,7 @@ class Link extends Model
         return [
             'tags' => 'array',
             'is_active' => 'boolean',
+            'show_interstitial' => 'boolean',
             'expires_at' => 'datetime',
             'password' => 'hashed',
         ];
