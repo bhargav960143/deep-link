@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LinkController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -47,6 +48,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
+
+    // Profile (verified, no tenant.access needed — user-level)
+    Route::middleware('verified')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    });
 
     // Verified routes — tenant access enforced
     Route::middleware(['verified', 'tenant.access'])->group(function () {
