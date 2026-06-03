@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\LinkController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
     // Verified routes — tenant access enforced
     Route::middleware(['verified', 'tenant.access'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Guide
+        Route::get('/guide', [GuideController::class, 'index'])->name('guide');
 
         // Apps
         Route::resource('apps', AppController::class)->except(['show']);
