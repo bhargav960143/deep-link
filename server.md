@@ -732,6 +732,7 @@ SESSION_PATH=/
 SESSION_DOMAIN=.deeplink.trentiums.com  # dot prefix = shared across all subdomains
                                         # critical: without this, tenant subdomain
                                         # sessions are isolated from central login
+SESSION_COOKIE=deeplink-session         # explicit name avoids conflict with stale cookies
 
 BROADCAST_CONNECTION=log
 FILESYSTEM_DISK=local
@@ -782,6 +783,7 @@ VITE_APP_NAME="${APP_NAME}"
 | `LOG_LEVEL` | `error` | only log real errors, not every query/event |
 | `SESSION_ENCRYPT` | `true` | session data encrypted in Redis |
 | `SESSION_DOMAIN` | `.deeplink.trentiums.com` | dot prefix shares cookie across all subdomains — login on central domain stays active on tenant subdomains |
+| `SESSION_COOKIE` | `deeplink-session` | explicit cookie name prevents browser conflicts if the name ever changes (see troubleshooting) |
 | `CLOUDFLARE_API_TOKEN` | token | read by pre-hook, written to `cloudflare.ini` before cert renewal |
 
 ### Still Needs Configuration
@@ -1287,6 +1289,7 @@ cp .env.example .env
 # DB_CONNECTION=pgsql, DB_HOST, DB_PORT=5432, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 # SESSION_DOMAIN=.deeplink.trentiums.com
 # SESSION_ENCRYPT=true
+# SESSION_COOKIE=deeplink-session
 # LOG_LEVEL=error
 # TENANCY_CENTRAL_DOMAINS="deeplink.trentiums.com"
 # TENANT_URL_PATTERN="{tenant}.deeplink.trentiums.com"
@@ -1444,6 +1447,31 @@ php artisan view:clear
 php artisan optimize:clear
 ```
 
+### Login Loop (POST /login succeeds but redirects back to /login)
+
+**Symptom:** Browser submits login form → 302 → GET /dashboard → 302 back to /login. Curl test works fine.
+
+**Root cause:** Browser has a stale session cookie from a previous session name or before a Redis flush. The server creates a new authenticated session after login and sets a new cookie, but the browser sends the old (now invalid) cookie on the /dashboard request. The server finds no session for that old cookie ID and treats the user as unauthenticated.
+
+**Fix — rename the session cookie** (forces all browsers to use the new cookie name, old ones ignored):
+
+```bash
+# In .env — add or change:
+SESSION_COOKIE=deeplink-session
+
+# Then:
+php artisan config:clear && php artisan config:cache
+```
+
+**Fix — flush Redis** (clears all stale sessions, users must log in again):
+
+```bash
+redis-cli -n 0 FLUSHDB
+php artisan cache:clear && php artisan config:cache
+```
+
+> **Note:** If `SESSION_ENCRYPT` is changed (enabled or disabled), all existing browser session cookies become undecryptable. Flush Redis to clear them.
+
 ### Queue Worker Not Processing
 
 ```bash
@@ -1465,4 +1493,4 @@ php artisan queue:work redis --tries=3 -vvv
 
 ---
 
-*Last updated: 2026-06-03 — production env hardened, search engine blocking, Cloudflare token via .env, tenancy config fix*
+*Last updated: 2026-06-03 — production env hardened, search engine blocking, Cloudflare token via .env, tenancy config fix, session cookie renamed to fix login loop*
