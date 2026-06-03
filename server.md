@@ -23,8 +23,9 @@ Complete reference for infrastructure, configuration, and architecture of the De
 15. [Request Lifecycle](#15-request-lifecycle)
 16. [Auto-Renewal Flow](#16-auto-renewal-flow)
 17. [Queue Worker](#17-queue-worker)
-18. [Deployment Checklist](#18-deployment-checklist)
-19. [Troubleshooting](#19-troubleshooting)
+18. [Git Configuration](#18-git-configuration)
+19. [Deployment Checklist](#19-deployment-checklist)
+20. [Troubleshooting](#20-troubleshooting)
 
 ---
 
@@ -1008,7 +1009,109 @@ sudo systemctl restart deeplink-worker
 
 ---
 
-## 18. Deployment Checklist
+## 18. Git Configuration
+
+### Repository
+
+| Property | Value |
+|---|---|
+| GitHub Repo | `https://github.com/bhargav960143/deep-link` |
+| Default Branch | `main` |
+| Local Path | `/opt/apps/deeplink.trentiums.com/htdocs` |
+
+### Global Config (`/home/ubuntu/.gitconfig`)
+
+```ini
+[user]
+    name  = Bhargav
+    email = bhargav@trentiums.com
+
+[credential]
+    helper = store          # credentials cached in ~/.git-credentials
+
+[safe]
+    directory = /opt/apps/deeplink.trentiums.com/htdocs
+    directory = /opt/apps/gmb-automation
+```
+
+### Remote Authentication
+
+Auth uses a **GitHub Personal Access Token (PAT)** embedded in the remote URL:
+
+```bash
+# View current remote (token redacted)
+git remote get-url origin
+# https://<PAT>@github.com/bhargav960143/deep-link.git
+
+# Update remote when PAT expires
+git remote set-url origin https://<NEW_PAT>@github.com/bhargav960143/deep-link.git
+```
+
+PAT is stored in the remote URL via `credential.helper=store`. When it expires, regenerate at:
+**GitHub → Settings → Developer Settings → Personal Access Tokens → Fine-grained tokens**
+
+Required PAT permissions:
+- `Contents` → Read & Write
+- `Metadata` → Read
+
+### Common Git Commands
+
+```bash
+# Pull latest
+git pull origin main
+
+# Check status
+git status
+
+# Stage and commit
+git add <files>
+git commit -m "type(scope): message"
+
+# Push
+git push origin main
+
+# View recent commits
+git log --oneline -10
+
+# View what changed in last commit
+git show --stat HEAD
+```
+
+### Commit Message Convention
+
+Project follows Conventional Commits:
+
+```
+<type>(<scope>): <subject>
+
+Types: feat | fix | docs | refactor | test | chore
+```
+
+Examples:
+```
+feat(links): add custom alias support
+fix(auth): correct session expiry check
+docs(server): update queue worker section
+```
+
+### Deploy Workflow (full)
+
+```bash
+cd /opt/apps/deeplink.trentiums.com/htdocs
+
+git pull origin main
+composer install --no-interaction --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize
+npm ci
+npm run build
+sudo systemctl restart deeplink-worker
+sudo systemctl reload nginx
+```
+
+---
+
+## 19. Deployment Checklist
 
 Use this when setting up on a fresh server.
 
@@ -1121,7 +1224,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-## 19. Troubleshooting
+## 20. Troubleshooting
 
 ### 403 Forbidden
 
