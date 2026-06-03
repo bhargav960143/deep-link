@@ -54,7 +54,7 @@
                        x-on:input.debounce.400ms="checkSlug"
                        class="flex-1 px-3 py-2 text-sm text-gray-900 focus:outline-none text-right placeholder-gray-400" placeholder="your-workspace">
                 <span class="flex items-center px-3 bg-gray-50 text-gray-500 text-sm border-l border-gray-300 whitespace-nowrap">
-                    .{{ str_replace(['http://', 'https://'], '', config('app.url')) }}
+                    .{{ ltrim(str_replace('{tenant}', '', env('TENANT_URL_PATTERN', '{tenant}.deeplink.trentiums.com')), '.') }}
                 </span>
                 <span class="flex items-center px-3">
                     <template x-if="slugStatus === 'available'">
