@@ -1,10 +1,22 @@
 @props(['lang' => 'text'])
 
-<div class="relative group">
-    <pre class="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto leading-relaxed"><code>{{ $slot }}</code></pre>
+<div class="relative" x-data="{ copied: false }">
+    <pre class="bg-gray-900 text-gray-100 rounded-lg p-4 pr-20 text-xs font-mono overflow-x-auto leading-relaxed whitespace-pre"><code>{{ $slot }}</code></pre>
     <button
-        onclick="navigator.clipboard.writeText(this.closest('.relative').querySelector('code').innerText)"
-        class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs px-2 py-1 rounded">
-        Copy
+        @click="
+            navigator.clipboard.writeText($el.closest('.relative').querySelector('code').innerText.trim());
+            copied = true;
+            setTimeout(() => copied = false, 2000);
+        "
+        class="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors"
+        :class="copied ? 'bg-green-600 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'">
+        <svg x-show="!copied" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+        </svg>
+        <svg x-show="copied" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <span x-text="copied ? 'Copied!' : 'Copy'"></span>
     </button>
 </div>
