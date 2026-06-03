@@ -37,7 +37,13 @@ class TenantRegistrationService
             $domain = env('TENANT_URL_PATTERN', '{tenant}.deeplink.test');
             $fullDomain = str_replace('{tenant}', $slug, $domain);
 
-            $tenant->domains()->create(['domain' => $fullDomain]);
+            $tenant->domains()->create([
+                'domain' => $fullDomain,
+                'type' => 'subdomain',
+                'is_primary' => true,
+                'status' => 'active',
+                'verified_at' => now(),
+            ]);
 
             TenantUser::create([
                 'tenant_id' => $tenant->id,

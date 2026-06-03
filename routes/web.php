@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LinkController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
@@ -53,5 +54,8 @@ Route::middleware('auth')->group(function () {
 
         // Apps
         Route::resource('apps', AppController::class)->except(['show']);
+
+        // Links
+        Route::resource('links', LinkController::class)->except(['show']);
     });
 });
